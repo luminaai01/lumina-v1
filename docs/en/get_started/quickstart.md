@@ -1,36 +1,8 @@
-<div id="top"></div>
-<div align="center">
-  <img src="docs/imgs/lagent_logo.png" width="450"/>
+# How to Use lumina
 
-[![docs](https://img.shields.io/badge/docs-latest-blue)](https://lagent.readthedocs.io/en/latest/)
-[![PyPI](https://img.shields.io/pypi/v/lagent)](https://pypi.org/project/lagent)
-[![license](https://img.shields.io/github/license/InternLM/lagent.svg)](https://github.com/InternLM/lagent/tree/main/LICENSE)
-[![issue resolution](https://img.shields.io/github/issues-closed-raw/InternLM/lagent)](https://github.com/InternLM/lagent/issues)
-[![open issues](https://img.shields.io/github/issues-raw/InternLM/lagent)](https://github.com/InternLM/lagent/issues)
-![Visitors](https://api.visitorbadge.io/api/visitors?path=InternLM%2Flagent%20&countColor=%23263759&style=flat)
-![GitHub forks](https://img.shields.io/github/forks/InternLM/lagent)
-![GitHub Repo stars](https://img.shields.io/github/stars/InternLM/lagent)
-![GitHub contributors](https://img.shields.io/github/contributors/InternLM/lagent)
+lumina v1.0 is inspired by the design philosophy of PyTorch. We expect that the analogy of neural network layers will make the workflow clearer and more intuitive, so users only need to focus on creating layers and defining message passing between them in a Pythonic way. This is a simple tutorial to get you quickly started with building multi-agent applications.
 
-</div>
-
-<p align="center">
-    👋 join us on <a href="https://twitter.com/intern_lm" target="_blank">𝕏 (Twitter)</a>, <a href="https://discord.gg/xa29JuW87d" target="_blank">Discord</a> and <a href="https://r.vansin.top/?r=internwx" target="_blank">WeChat</a>
-</p>
-
-## Installation
-
-Install from source:
-
-```bash
-git clone https://github.com/InternLM/lagent.git
-cd lagent
-pip install -e .
-```
-
-## Usage
-
-Lagent is inspired by the design philosophy of PyTorch. We expect that the analogy of neural network layers will make the workflow clearer and more intuitive, so users only need to focus on creating layers and defining message passing between them in a Pythonic way. This is a simple tutorial to get you quickly started with building multi-agent applications.
+## Core Ideas
 
 ### Models as Agents
 
@@ -38,13 +10,13 @@ Agents use `AgentMessage` for communication.
 
 ```python
 from typing import Dict, List
-from lagent.agents import Agent
-from lagent.schema import AgentMessage
-from lagent.llms import VllmModel, INTERNLM2_META
+from lumina.agents import Agent
+from lumina.schema import AgentMessage
+from lumina.llms import VllmModel, LUMINA2_META
 
 llm = VllmModel(
     path='Qwen/Qwen2-7B-Instruct',
-    meta_template=INTERNLM2_META,
+    meta_template=LUMINA2_META,
     tp=1,
     top_k=1,
     temperature=1.0,
@@ -96,7 +68,7 @@ print(dumped_memory['memory'])
 Clear the memory of this session(`session_id=0` by default):
 
 ```python
-agent.reset()
+agent.memory.reset()
 ```
 
 ### Custom Message Aggregation
@@ -119,9 +91,9 @@ Implement a simple aggregator that can receive few-shots
 
 ```python
 from typing import List, Union
-from lagent.memory import Memory
-from lagent.prompts import StrParser
-from lagent.agents.aggregator import DefaultAggregator
+from lumina.memory import Memory
+from lumina.prompts import StrParser
+from lumina.agents.aggregator import DefaultAggregator
 
 class FewshotAggregator(DefaultAggregator):
     def __init__(self, few_shot: List[dict] = None):
@@ -189,7 +161,7 @@ In `AgentMessage`, `formatted` is reserved to store information parsed by `outpu
 Use a tool parser as follows
 
 ````python
-from lagent.prompts.parsers import ToolParser
+from lumina.prompts.parsers import ToolParser
 
 system_prompt = "逐步分析并编写Python代码解决以下问题。"
 parser = ToolParser(tool_type='code interpreter', begin='```python\n', end='\n```\n')
@@ -233,9 +205,9 @@ print(bot_msg.model_dump_json(indent=4))
 You can register custom hooks for message conversion.
 
 ```python
-from lagent.hooks import Hook
-from lagent.schema import ActionReturn, ActionStatusCode, AgentMessage
-from lagent.actions import ActionExecutor, IPythonInteractive
+from lumina.hooks import Hook
+from lumina.schema import ActionReturn, ActionStatusCode, AgentMessage
+from lumina.actions import ActionExecutor, IPythonInteractive
 
 class CodeProcessor(Hook):
     def before_action(self, executor, message, session_id):
@@ -275,18 +247,18 @@ print(executor_msg)
 content='3969.0' sender='ActionExecutor' formatted=None extra_info=None type=None receiver=None stream_state=<AgentStatusCode.END: 0>
 ```
 
-**For convenience, Lagent provides `InternLMActionProcessor` which is adapted to messages formatted by `ToolParser` as mentioned above.**
+**For convenience, lumina provides `LUMINAActionProcessor` which is adapted to messages formatted by `ToolParser` as mentioned above.**
 
 ### Dual Interfaces
 
-Lagent adopts dual interface design, where almost every component(LLMs, actions, action executors...) has the corresponding asynchronous variant by prefixing its identifier with 'Async'. It is recommended to use synchronous agents for debugging and asynchronous ones for large-scale inference to make the most of idle CPU and GPU resources.
+lumina adopts dual interface design, where almost every component(LLMs, actions, action executors...) has the corresponding asynchronous variant by prefixing its identifier with 'Async'. It is recommended to use synchronous agents for debugging and asynchronous ones for large-scale inference to make the most of idle CPU and GPU resources.
 
 However, make sure the internal consistency of agents, i.e. asynchronous agents should be equipped with asynchronous LLMs and asynchronous action executors that drive asynchronous tools.
 
 ```python
-from lagent.llms import VllmModel, AsyncVllmModel, LMDeployPipeline, AsyncLMDeployPipeline
-from lagent.actions import ActionExecutor, AsyncActionExecutor, WebBrowser, AsyncWebBrowser
-from lagent.agents import Agent, AsyncAgent, AgentForInternLM, AsyncAgentForInternLM
+from lumina.llms import VllmModel, AsyncVllmModel, LMDeployPipeline, AsyncLMDeployPipeline
+from lumina.actions import ActionExecutor, AsyncActionExecutor, WebBrowser, AsyncWebBrowser
+from lumina.agents import Agent, AsyncAgent, AgentForLUMINA, AsyncAgentForLUMINA
 ```
 
 ______________________________________________________________________
@@ -301,14 +273,14 @@ ______________________________________________________________________
 Math agents that solve problems by programming
 
 ````python
-from lagent.agents.aggregator import InternLMToolAggregator
+from lumina.agents.aggregator import LUMINAToolAggregator
 
 class Coder(Agent):
     def __init__(self, model_path, system_prompt, max_turn=3):
         super().__init__()
         llm = VllmModel(
             path=model_path,
-            meta_template=INTERNLM2_META,
+            meta_template=LUMINA2_META,
             tp=1,
             top_k=1,
             temperature=1.0,
@@ -321,9 +293,9 @@ class Coder(Agent):
             output_format=ToolParser(
                 tool_type='code interpreter', begin='```python\n', end='\n```\n'
             ),
-            # `InternLMToolAggregator` is adapted to `ToolParser` for aggregating
+            # `LUMINAToolAggregator` is adapted to `ToolParser` for aggregating
             # messages with tool invocations and execution results
-            aggregator=InternLMToolAggregator(),
+            aggregator=LUMINAToolAggregator(),
         )
         self.executor = ActionExecutor([IPythonInteractive()], hooks=[CodeProcessor()])
         self.max_turn = max_turn
@@ -357,8 +329,8 @@ Asynchronous blogging agents that improve writing quality by self-refinement ([o
 ```python
 import asyncio
 import os
-from lagent.llms import AsyncGPTAPI
-from lagent.agents import AsyncAgent
+from lumina.llms import AsyncGPTAPI
+from lumina.agents import AsyncAgent
 os.environ['OPENAI_API_KEY'] = 'YOUR_API_KEY'
 
 class PrefixedMessageHook(Hook):
@@ -425,10 +397,10 @@ A multi-agent workflow that performs information retrieval, data collection and 
 
 ````python
 import json
-from lagent.actions import IPythonInterpreter, WebBrowser, ActionExecutor
-from lagent.agents.stream import get_plugin_prompt
-from lagent.llms import GPTAPI
-from lagent.hooks import InternLMActionProcessor
+from lumina.actions import IPythonInterpreter, WebBrowser, ActionExecutor
+from lumina.agents.stream import get_plugin_prompt
+from lumina.llms import GPTAPI
+from lumina.hooks import LUMINAActionProcessor
 
 TOOL_TEMPLATE = (
     "You are a helpful AI assistant, collaborating with other assistants. Use the provided tools to progress"
@@ -459,7 +431,7 @@ class DataVisualizer(Agent):
                 end="\n```\n",
                 validate=lambda x: json.loads(x.rstrip('`')),
             ),
-            aggregator=InternLMToolAggregator(),
+            aggregator=LUMINAToolAggregator(),
             name="researcher",
         )
         self.charter = Agent(
@@ -476,10 +448,10 @@ class DataVisualizer(Agent):
                 end="\n```\n",
                 validate=lambda x: x.rstrip('`'),
             ),
-            aggregator=InternLMToolAggregator(),
+            aggregator=LUMINAToolAggregator(),
             name="charter",
         )
-        self.executor = ActionExecutor([interpreter, browser], hooks=[InternLMActionProcessor()])
+        self.executor = ActionExecutor([interpreter, browser], hooks=[LUMINAActionProcessor()])
         self.finish_pattern = finish_pattern
         self.max_turn = max_turn
 
@@ -511,22 +483,3 @@ bot_msg = visualizer(user_msg)
 print(bot_msg.content)
 json.dump(visualizer.state_dict(), open('visualizer.json', 'w'), ensure_ascii=False, indent=4)
 ````
-
-## Citation
-
-If you find this project useful in your research, please consider cite:
-
-```latex
-@misc{lagent2023,
-    title={{Lagent: InternLM} a lightweight open-source framework that allows users to efficiently build large language model(LLM)-based agents},
-    author={Lagent Developer Team},
-    howpublished = {\url{https://github.com/InternLM/lagent}},
-    year={2023}
-}
-```
-
-## License
-
-This project is released under the [Apache 2.0 license](LICENSE).
-
-<p align="right"><a href="#top">🔼 Back to top</a></p>
